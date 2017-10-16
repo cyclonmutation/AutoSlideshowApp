@@ -221,17 +221,30 @@ public class MainActivity extends AppCompatActivity {
     //App終了時にcursor.close()
     @Override
     protected void onDestroy() {
-        Log.d("Android", "onDestroy");
-        cursor.close();
-        super.onDestroy();
+        if (cursor!=null) {   //cursorがnullでないcursor.close()
+            Log.d("Android", "onDestroy");
+            cursor.close();
+            super.onDestroy();
+        } else {    //Timer未起動の場合はそのまま終了
+            Log.d("Android", "onDestroy");
+            super.onDestroy();
+        }
     }
 
+    /*
     //Androidホームに戻ったとき、再生を停止する
     @Override
     protected void onPause() {
-        Log.d("Android", "onPause");
-        cursor.close();
-        super.onPause();
+        if (cursor!=null) {   //cursorがnullでないcursor.close()
+            Log.d("Android", "onPause");
+            cursor.close();
+            cursor = null;
+            super.onPause();
+        } else {    //Timer未起動の場合はそのまま終了
+            Log.d("Android", "onPause");
+            super.onPause();
+        }
     }
+*/
 
 }
