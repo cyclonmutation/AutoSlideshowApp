@@ -30,7 +30,6 @@ public class MainActivity extends AppCompatActivity {
     //timer用
     Timer mTimer;
     ImageView mTimerView;
-    double mTimerSec = 0.0;
     Handler mHandler = new Handler();
 
     //ギャラリーからデータ取得する用
@@ -39,12 +38,21 @@ public class MainActivity extends AppCompatActivity {
     Button mStartButton;
     Button mBackButton;
     Button mNextButton;
+    ImageView mImageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //findViewByIdはメモリを食いやすいのでなるべくmember変数として定義して回数を減らすこと！
+        mTimerView = (ImageView) findViewById(R.id.imageView);
+        mStartButton = (Button) findViewById(R.id.start_button);
+        mBackButton = (Button) findViewById(R.id.back_button);
+        mNextButton = (Button) findViewById(R.id.next_button);
+        mImageView = (ImageView) findViewById(R.id.imageView);
+
+        
         //Permissionを取得する
         // Android 6.0以降の場合
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -54,18 +62,15 @@ public class MainActivity extends AppCompatActivity {
                 getContentsInfo();
             } else {
                 // 許可されていないので許可ダイアログを表示する
+                mStartButton.setVisibility(View.INVISIBLE);
+                mBackButton.setVisibility(View.INVISIBLE);
+                mNextButton.setVisibility(View.INVISIBLE);
                 requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSIONS_REQUEST_CODE);
             }
         } else {
             //Android 5系以下の場合、最初の画像を表示する
             getContentsInfo();
         }
-
-        mTimerView = (ImageView) findViewById(R.id.imageView);
-        mStartButton = (Button) findViewById(R.id.start_button);
-        mBackButton = (Button) findViewById(R.id.back_button);
-        mNextButton = (Button) findViewById(R.id.next_button);
-
 
         //スタートボタン
         mStartButton.setOnClickListener(new View.OnClickListener() {
@@ -85,7 +90,6 @@ public class MainActivity extends AppCompatActivity {
                     mTimer.schedule(new TimerTask() {
                         @Override
                         public void run() {
-                            mTimerSec += 2; //2秒timer
                             mHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
@@ -134,12 +138,10 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 //1枚目の画像を取得
                 if (cursor.moveToNext()) {
-                    setImageView();
                 } else {  //最初の画像に戻す
                     cursor.moveToFirst();
-                    setImageView();
                 }
-
+                setImageView();
             }
         });
     }
@@ -161,6 +163,10 @@ public class MainActivity extends AppCompatActivity {
             setImageView();
         } else {
             //画像が1枚も無い場合、dialogを表示してアプリを終了する
+//            mStartButton.setVisibility(View.GONE);
+//            mBackButton.setVisibility(View.GONE);
+//            mNextButton.setVisibility(View.GONE);
+
             new AlertDialog.Builder(this)
                     .setTitle("Confirm")
                     .setMessage("画像がありません。アプリを終了します")
@@ -168,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             // OK button pressed
-                            cursor.close();
+//                            cursor.close();
                             finish();
                         }
                     })
@@ -182,8 +188,7 @@ public class MainActivity extends AppCompatActivity {
         Long id = cursor.getLong(fieldIndex);
         Uri imageUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
 
-        ImageView imageVIew = (ImageView) findViewById(R.id.imageView);
-        imageVIew.setImageURI(imageUri);
+        mImageView.setImageURI(imageUri);
     }
 
 
@@ -233,6 +238,7 @@ public class MainActivity extends AppCompatActivity {
 
     /*
     //Androidホームに戻ったとき、再生を停止する
+    //onPause()でcursor.close()する場合は、onResume()にも記載すること
     @Override
     protected void onPause() {
         if (cursor!=null) {   //cursorがnullでないcursor.close()
